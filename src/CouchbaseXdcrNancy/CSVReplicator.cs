@@ -28,7 +28,7 @@ namespace CouchbaseXdcrNancy
 {
 	public class CSVReplicator : IReplicationHandler
 	{
-		public bool IsMissing(string rev)
+		public bool IsMissing(string key, string rev)
 		{
 			throw new NotImplementedException();
 		}

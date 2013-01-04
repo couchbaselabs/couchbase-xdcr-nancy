@@ -44,11 +44,11 @@ namespace CouchbaseXdcrNancy
 			}
 		}
 
-		public bool IsMissing(string rev)
+		public bool IsMissing(string key, string rev)
 		{
 			var xml = XDocument.Load(_path);
 			var documents = xml.Document.Root.Elements("document");
-			var document = documents.Where(d => d.Element("meta").Element("rev").Value == rev);
+			var document = documents.Where(d => d.Element("meta").Element("rev").Value == rev && d.Element("meta").Element("id").Value == key);
 			return document.Count() == 0;
 		}
 

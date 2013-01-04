@@ -28,7 +28,7 @@ namespace CouchbaseXdcrNancy
 {
 	public interface IReplicationHandler
 	{
-		bool IsMissing(string rev);
+		bool IsMissing(string key, string rev);
 
 		void CreateDocument(Document document);
 	}

@@ -205,10 +205,11 @@ namespace CouchbaseXdcrNancy
 				var outDict = new Dictionary<string, object>();
 				foreach (var item in jobj)
 				{
+					var key = item.Key;
 					var rev = item.Value.ToString();
-					if (handler.IsMissing(rev)) 
+					if (handler.IsMissing(key, rev)) 
 					{
-						outDict[item.Key] = new { missing = rev };
+						outDict[key] = new { missing = rev };
 					}
 				}
 
