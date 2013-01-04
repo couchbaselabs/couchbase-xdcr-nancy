@@ -25,21 +25,32 @@ using System.Linq;
 using System.Web;
 using Nancy;
 using Nancy.Security;
+using System.IO;
+using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace CouchbaseXdcrNancy
 {
 	public class XdcrModule : NancyModule
 	{
 		private const string XDCR_RECEIVER = "127.0.0.1";
-		private const int XDCR_PORT = 8675; //Port configured in project properties
+		private const int XDCR_PORT = 8675; //Port configured in Visual Studio project properties
 		private const string XDCR_BUCKET = "default";
-		private const string UUID_POOL = "3b5211459ec34c589522f78c2284099e"; //SecureRandom.uuid.gsub("-", "")
-		private const string UUID_BUCKET = "9e4d14d5a9be45cba5ec5534f42e129b";//#SecureRandom.uuid.gsub("-", "")
+		private const string UUID_POOL = "3b5211459ec34c589522f78c2284099e";
+		private const string UUID_BUCKET = "9e4d14d5a9be45cba5ec5534f42e129b";
+
+		private const string REGEX_VBUCKET =        @"/(?<bucket>[\w]{1,})/(?<vbucket>[\d]{1,})(;|%3b)(?<uuid>[\w]{1,})";
+		private const string REGEX_MASTER_VBUCKET = @"/(?<bucket>[\w]{1,})/(?<master>[\w]{1,})(;|%3b)(?<uuid>[\w]{1,})";
+		private const string REGEX_MASTER_VBUCKET_LOCAL = @"/(?<bucket>[\w]{1,})/(?<master>[\w]{1,})(;|%3b)(?<uuid>[\w]{1,})/_local/(?<vbucket>[\d]{1,4})-(?<rev>[\w]{1,})/(?<bucket>[\w]{1,})/(?<bucket>[\w]{1,})";
+
+		private const string REGEX_POST_ROOT = @"/(?<a>[\w]{1,})/(?<b>[\w]{1,})(;|%3b)(?<c>[\w]{1,})/";
+		private const string REGEX_REVS_DIFF = REGEX_POST_ROOT + "_revs_diff";
+		private const string REGEX_FULL_COMMIT = REGEX_POST_ROOT + "_ensure_full_commit";
+		private const string REGEX_BULK_DOCS = REGEX_POST_ROOT + "_bulk_docs";
 
 		private List<int[]> VBucketMap = Enumerable.Range(0, 1024).Select(i => new int[] { 0, 1 }).ToList();
-		//1024.times { VBucketMap << [0,1] }
-
-		public XdcrModule()
+		
+		public XdcrModule(IReplicationHandler handler)
 		{
 			this.RequiresAuthentication();
 
@@ -137,6 +148,114 @@ namespace CouchbaseXdcrNancy
 
 				return Response.AsJson(output);
 			};
+
+			Get[REGEX_VBUCKET] = x =>
+			{
+				var status = getBucketExistsStatusCode(x.bucket);
+
+				if (Request.Method == "HEAD")
+				{
+					return status;
+				}
+
+				var result = new { db_name = XDCR_BUCKET };
+
+				return status == HttpStatusCode.OK ? Response.AsJson(result) : null;
+			};
+
+			Get[REGEX_MASTER_VBUCKET] = x =>
+			{
+				var status = getBucketExistsStatusCode(x.bucket);
+
+				if (Request.Method == "HEAD")
+				{
+					return status;
+				}
+
+				var result = new { db_name = XDCR_BUCKET };
+
+				return status == HttpStatusCode.OK ? Response.AsJson(result) : null;
+			};
+
+			//TODO: figure out a regex for both this pattern and master_vbucket - Sinatra version works like that
+			Get[REGEX_MASTER_VBUCKET_LOCAL] = x =>
+			{
+				var status = getBucketExistsStatusCode(x.bucket);
+
+				if (Request.Method == "HEAD")
+				{
+					return status;
+				}
+
+				var result = new { db_name = XDCR_BUCKET };
+
+				return status == HttpStatusCode.OK ? Response.AsJson(result) : null;
+			};
+
+			Post[REGEX_REVS_DIFF] = x =>
+			{
+				var body = "";
+				Context.Request.Body.Position = 0;
+				using (var sr = new StreamReader(Context.Request.Body))
+				{
+					body = sr.ReadToEnd();
+				}
+				var jobj = JObject.Parse(body);
+
+				var outDict = new Dictionary<string, object>();
+				foreach (var item in jobj)
+				{
+					var rev = item.Value.ToString();
+					if (handler.IsMissing(rev)) 
+					{
+						outDict[item.Key] = new { missing = rev };
+					}
+				}
+
+				return Response.AsJson(outDict);
+			};
+
+			Post[REGEX_FULL_COMMIT] = x =>
+			{
+				return Response.AsJson(new { ok = true }, HttpStatusCode.Created);
+			};
+
+			Post[REGEX_BULK_DOCS] = x =>
+			{
+				var body = "";
+				Context.Request.Body.Position = 0;
+				using (var sr = new StreamReader(Context.Request.Body))
+				{
+					body = sr.ReadToEnd();
+				}
+				var jobj = JObject.Parse(body);
+
+				var newEdits = jobj.Value<bool>("new_edits");
+				var docs = jobj.Value<JArray>("docs");
+				foreach (var doc in docs)
+				{
+					var originalDoc = Encoding.UTF8.GetString(Convert.FromBase64String(doc.Value<string>("base64")));
+					var meta = doc["meta"] as JObject;
+
+					var document = new Document
+					{
+						Id = meta.Value<string>("id"),
+						Revision = meta.Value<string>("rev"),
+						Expiration = meta.Value<int>("expiration"),
+						Flags = meta.Value<int>("flags"),
+						Value = originalDoc
+					};
+					
+					handler.CreateDocument(document);
+				}
+
+				return HttpStatusCode.Created;
+			};
+		}
+
+		private HttpStatusCode getBucketExistsStatusCode(string database)
+		{
+			return database == XDCR_BUCKET ? HttpStatusCode.OK : HttpStatusCode.NotFound;
 		}
 	}
 }

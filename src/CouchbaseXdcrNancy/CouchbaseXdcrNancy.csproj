@@ -43,6 +43,9 @@
     <Reference Include="Nancy.Hosting.Aspnet">
       <HintPath>..\packages\Nancy.Hosting.Aspnet.0.14.1\lib\net40\Nancy.Hosting.Aspnet.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -69,11 +72,16 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AuthenticationBootstrapper.cs" />
+    <Compile Include="CSVReplicator.cs" />
+    <Compile Include="Document.cs" />
+    <Compile Include="IReplicationHandler.cs" />
+    <Compile Include="NotFoundStatusCodeHandler.cs" />
+    <Compile Include="ApplicationBootstrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XdcrModule.cs" />
     <Compile Include="XdcrUserIdentity.cs" />
     <Compile Include="XdcrUserValidator.cs" />
+    <Compile Include="XmlReplicator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
