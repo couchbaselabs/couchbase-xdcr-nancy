@@ -64,9 +64,12 @@ namespace CouchbaseXdcrNancy
 						buckets = new { uri = "/pools/default/buckets?uuid=" + UUID_POOL },
 						nodes = new object[] 
 						{	
-							new { ports = new { direct = XDCR_PORT } },
-							new { couchApiBase = string.Concat("http://", XDCR_RECEIVER, ":", XDCR_PORT, "/") },
-							new { hostname = string.Concat(XDCR_RECEIVER, ":", XDCR_PORT) }
+							new 
+							{ 
+								ports = new { direct = XDCR_PORT } ,
+								couchApiBase = string.Concat("http://", XDCR_RECEIVER, ":", XDCR_PORT, "/"),
+								hostname = string.Concat(XDCR_RECEIVER, ":", XDCR_PORT) 
+							}
 						}
 					};
 
@@ -75,25 +78,30 @@ namespace CouchbaseXdcrNancy
 
 			Get["pools/default/buckets"] = x =>
 			{
-				var output = new
+				var output = new object[]
 				{
-					bucketCapabilities = new string[] { "couchbapi" },
-					bucketType = "membase",
-					nodes = new object[] 
-					{ 
-						new { ports = new { direct = XDCR_PORT } },
-						new { couchApiBase = string.Concat("http://", XDCR_RECEIVER, ":", XDCR_PORT, "/") },
-						new { hostname = string.Concat(XDCR_RECEIVER, ":", XDCR_PORT) }
-					},
-					name = XDCR_BUCKET,
-					vBucketServerMap = new
+					new 
 					{
-						serverList = new string[] { string.Concat(XDCR_RECEIVER, ":", XDCR_PORT) },
-						VBucketMap = VBucketMap
-					},
-					uuid = UUID_BUCKET,
-					uri = string.Concat("pools/default/buckets/", XDCR_BUCKET, "?bucket_uuid=", UUID_BUCKET)
-
+						bucketCapabilities = new string[] { "couchapi" },
+						bucketType = "membase",
+						nodes = new object[] 
+						{	
+							new 
+							{ 
+								ports = new { direct = XDCR_PORT } ,
+								couchApiBase = string.Concat("http://", XDCR_RECEIVER, ":", XDCR_PORT, "/default"),
+								hostname = string.Concat(XDCR_RECEIVER, ":", XDCR_PORT) 
+							}
+						},
+						name = XDCR_BUCKET,
+						vBucketServerMap = new
+						{
+							serverList = new string[] { string.Concat(XDCR_RECEIVER, ":", XDCR_PORT) },
+							vBucketMap = VBucketMap
+						},
+						uuid = UUID_BUCKET,
+						uri = string.Concat("/pools/default/buckets/", XDCR_BUCKET, "?bucket_uuid=", UUID_BUCKET)
+					}
 				};
 
 				return Response.AsJson(output);
@@ -101,25 +109,30 @@ namespace CouchbaseXdcrNancy
 
 			Get["pools/default/buckets/{bucket}"] = x =>
 			{
-				var output = new
+				var output = new object[]
 				{
-					bucketCapabilities = new string[] { "couchbapi" },
-					bucketType = "membase",
-					nodes = new object[] 
-					{ 
-						new { ports = new { direct = XDCR_PORT } },
-						new { couchApiBase = string.Concat("http://", XDCR_RECEIVER, ":", XDCR_PORT, "/") },
-						new { hostname = string.Concat(XDCR_RECEIVER, ":", XDCR_PORT) }
-					},
-					name = XDCR_BUCKET,
-					vBucketServerMap = new
+					new 
 					{
-						serverList = new string[] { string.Concat(XDCR_RECEIVER, ":", XDCR_PORT) },
-						VBucketMap = VBucketMap
-					},
-					uuid = UUID_BUCKET,
-					uri = string.Concat("pools/default/buckets/", XDCR_BUCKET, "?bucket_uuid=", UUID_BUCKET)
-
+						bucketCapabilities = new string[] { "couchapi" },
+						bucketType = "membase",
+						nodes = new object[] 
+						{	
+							new 
+							{ 
+								ports = new { direct = XDCR_PORT } ,
+								couchApiBase = string.Concat("http://", XDCR_RECEIVER, ":", XDCR_PORT, "/default"),
+								hostname = string.Concat(XDCR_RECEIVER, ":", XDCR_PORT) 
+							}
+						},
+						name = XDCR_BUCKET,
+						vBucketServerMap = new
+						{
+							serverList = new string[] { string.Concat(XDCR_RECEIVER, ":", XDCR_PORT) },
+							vBucketMap = VBucketMap
+						},
+						uuid = UUID_BUCKET,
+						uri = string.Concat("/pools/default/buckets/", XDCR_BUCKET, "?bucket_uuid=", UUID_BUCKET)
+					}
 				};
 
 				return Response.AsJson(output);
